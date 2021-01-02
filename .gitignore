@@ -127,3 +127,7 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+Sign-Language-Digits-Dataset-master/
+sign/
+saved/
