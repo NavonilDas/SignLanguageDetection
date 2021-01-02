@@ -13,6 +13,7 @@ from tensorflow.keras.applications import MobileNet
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.models import load_model
 
 
 # input image size
@@ -147,3 +148,10 @@ def train_model(train_set, valid_set):
 pre_process_dataset()
 
 model = None
+
+# if model is already saved then load model else train model
+if os.path.isfile(SAVED_MODEL):
+    model = load_model(SAVED_MODEL)
+else:
+    train_set, valid_set = get_image_gen()
+    model = train_model(train_set, valid_set)
