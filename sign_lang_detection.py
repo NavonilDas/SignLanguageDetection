@@ -8,14 +8,23 @@ import random
 from tensorflow.keras.applications.mobilenet import preprocess_input
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
+# For Training & Predicting
+from tensorflow.keras.applications import MobileNet
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers import Adam
+
 
 # input image size
 IMAGE_SIZE = (224, 224)
+
+SAVED_MODEL = 'saved/trained_model.h5'
 
 DATASET_PARENT_FOLDER = 'Sign-Language-Digits-Dataset-master'
 DATASET_FOLDER = f'{DATASET_PARENT_FOLDER}/Dataset'
 TRAINING_FOLDER = 'sign/train'
 VALIDATION_FOLDER = 'sign/valid'
+
 
 def pre_process_dataset():
     """
@@ -97,3 +106,44 @@ def get_image_gen():
     )
 
     return train_set, valid_set
+
+
+def train_model(train_set, valid_set):
+    """
+    Train & Save Model
+    """
+    # Get the trained Mobilenet model
+    mobile = MobileNet()
+
+    # Remove Bottom 6 Layers
+    prev_layers = mobile.layers[-6].output
+    # Add a Dense layer with 10 out and softmax activation function for probablity
+    # Uses Keras Functional API
+    output = Dense(units=10, activation='softmax')(prev_layers)
+
+    # Create The new model with the dense layer
+    model = Model(inputs=mobile.input, outputs=output)
+
+    # Disable training for all the layers except the last 21 layers
+    for layer in mobile.layers[:-21]:
+        layer.trainable = False
+
+    # Print The summary of model
+    model.summary()
+
+    # Compile The model
+    model.compile(optimizer=Adam(learning_rate=0.0001),
+                  loss='categorical_crossentropy', metrics=['accuracy'])
+
+    # Train model with 25 epochs
+    model.fit(x=train_set, validation_data=valid_set, epochs=25, verbose=2)
+
+    # Save the training model
+    model.save(SAVED_MODEL)
+
+    return model
+
+
+pre_process_dataset()
+
+model = None
