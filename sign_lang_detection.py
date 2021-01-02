@@ -7,6 +7,7 @@ import random
 # For Preprocess input Image
 from tensorflow.keras.applications.mobilenet import preprocess_input
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import numpy as np
 
 # For Training & Predicting
 from tensorflow.keras.applications import MobileNet
@@ -14,6 +15,8 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.models import load_model
+# For Image Processing
+import cv2
 
 
 # input image size
@@ -25,6 +28,9 @@ DATASET_PARENT_FOLDER = 'Sign-Language-Digits-Dataset-master'
 DATASET_FOLDER = f'{DATASET_PARENT_FOLDER}/Dataset'
 TRAINING_FOLDER = 'sign/train'
 VALIDATION_FOLDER = 'sign/valid'
+
+# Used in predictions if probablity > thresh return the result
+THRESH = 60
 
 
 def pre_process_dataset():
@@ -143,6 +149,35 @@ def train_model(train_set, valid_set):
     model.save(SAVED_MODEL)
 
     return model
+
+
+def predict_from_img(model, img):
+    """
+    Predict The result of the image
+    """
+    height, width, _ = img.shape
+    # Resize image if it is not 224x224
+    if height != 224 or width != 224:
+        img = cv2.resize(img, (224, 224))
+    # Preprocess input img on the basis of mobilenet
+    pre = preprocess_input(img)
+    # Reshape based on the requirement of input
+    pre = np.array(pre).reshape(-1, 224, 224, 3)
+    # Find Predictions
+    preds = model.predict(x=pre)
+    # Copy Prediction in probablity
+    probs = preds
+    # Find the index which has maximum probablity (0 - 9)
+    preds = preds.argmax(axis=1)
+    # Store the index
+    ans = preds[0]
+    # Store the maximum probablity
+    prob = round(probs[0][ans] * 100)
+
+    if prob > THRESH:
+        return (ans, prob)
+
+    return (None, None)
 
 
 pre_process_dataset()
