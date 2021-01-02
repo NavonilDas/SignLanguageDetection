@@ -180,17 +180,41 @@ def predict_from_img(model, img):
     return (None, None)
 
 
-def from_examples(model):
-    examples = os.listdir(f'{DATASET_PARENT_FOLDER}/Examples')
-    for example in examples:
-        img = cv2.imread(f'{DATASET_PARENT_FOLDER}/Examples/{example}')
-        ans, _ = predict_from_img(model, img)
+def from_camera(model):
+    """
+    Read From camera and show results
+    """
+    # Read From Camera change 0 with other number if you have multiple cameras
+    # 0 can also be replaced by video path
+    cap = cv2.VideoCapture(0)
+
+    while True:
+        # Read Frame
+        ret, frame = cap.read()
+
+        # if there is no frame break from loop
+        if not ret:
+            break
+
+        # If your camera size is large uncomment the next line
+        # frame = cv2.resize(frame, (640, 360))
+        # IF you want to change the orientation of image un comment the next line
+        # frame = cv2.rotate(frame, cv2.ROTATE_90_CLOCKWISE)
+
+        ans, _ = predict_from_img(model, frame)
+
+        # Draw result
         if not ans is None:
-            # Scale Image For Clearity
-            img = cv2.resize(img, IMAGE_SIZE)
-            cv2.putText(img, f'Result {ans}', (10, 100), 0, 1, (255, 0, 0))
-            cv2.imshow(example, img)
-    cv2.waitKey(0)
+            cv2.putText(frame, f'Result {ans}', (10, 100), 0, 1, (255, 0, 0))
+
+        # Show Result
+        cv2.imshow('Video Feed', frame)
+
+        # Press x to quit
+        if cv2.waitKey(1) & 0xFF == ord('x'):
+            break
+
+    cap.release()
     cv2.destroyAllWindows()
 
 
@@ -206,4 +230,4 @@ else:
     model = train_model(train_set, valid_set)
 
 
-from_examples(model)
+from_camera(model)
