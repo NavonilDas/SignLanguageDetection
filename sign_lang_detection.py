@@ -180,6 +180,20 @@ def predict_from_img(model, img):
     return (None, None)
 
 
+def from_examples(model):
+    examples = os.listdir(f'{DATASET_PARENT_FOLDER}/Examples')
+    for example in examples:
+        img = cv2.imread(f'{DATASET_PARENT_FOLDER}/Examples/{example}')
+        ans, _ = predict_from_img(model, img)
+        if not ans is None:
+            # Scale Image For Clearity
+            img = cv2.resize(img, IMAGE_SIZE)
+            cv2.putText(img, f'Result {ans}', (10, 100), 0, 1, (255, 0, 0))
+            cv2.imshow(example, img)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
 pre_process_dataset()
 
 model = None
@@ -190,3 +204,6 @@ if os.path.isfile(SAVED_MODEL):
 else:
     train_set, valid_set = get_image_gen()
     model = train_model(train_set, valid_set)
+
+
+from_examples(model)
