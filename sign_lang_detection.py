@@ -4,6 +4,11 @@ import os.path
 import shutil
 import random
 
+# For Preprocess input Image
+from tensorflow.keras.applications.mobilenet import preprocess_input
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+
+
 # input image size
 IMAGE_SIZE = (224, 224)
 
@@ -59,3 +64,36 @@ def pre_process_dataset():
             # Move the remaing dataset to training folder
             shutil.move(folder, f'{TRAINING_FOLDER}/{i}')
 
+
+def get_image_gen():
+    """
+    preproces input images from the directory.
+    """
+    # 2.24 => 224 / 100 (100 is image size)
+
+    train_datagen = ImageDataGenerator(
+        rescale=2.24,
+        preprocessing_function=preprocess_input
+    )
+
+    valid_datagen = ImageDataGenerator(
+        rescale=2.24,
+        preprocessing_function=preprocess_input
+    )
+    # 10 batches 0 - 9
+
+    train_set = train_datagen.flow_from_directory(
+        directory='sign/train',
+        target_size=IMAGE_SIZE,
+        batch_size=10,
+        class_mode='categorical'
+    )
+
+    valid_set = valid_datagen.flow_from_directory(
+        directory='sign/valid',
+        target_size=IMAGE_SIZE,
+        batch_size=10,
+        class_mode='categorical'
+    )
+
+    return train_set, valid_set
